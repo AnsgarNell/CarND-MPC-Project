@@ -8,6 +8,10 @@ using namespace std;
 
 class MPC {
  public:
+ 
+  double steer_value_;
+  double throttle_value_;
+ 
   MPC();
 
   virtual ~MPC();
