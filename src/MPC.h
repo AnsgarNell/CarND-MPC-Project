@@ -11,6 +11,8 @@ class MPC {
  
   double steer_value_;
   double throttle_value_;
+  vector<double> pred_x_;
+  vector<double> pred_y_;
  
   MPC();
 

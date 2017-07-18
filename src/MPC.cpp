@@ -6,10 +6,8 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 12;
+size_t N = 10;
 double dt = 0.05;
-
-int num_states = static_cast<int>(0.1 / dt + 0.5);
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -64,13 +62,13 @@ class FG_eval {
 
     // Minimize the use of actuators.
     for (int t = 0; t < N - 1; t++) {
-      fg[0] += CppAD::pow(vars[delta_start + t], 2);
-      fg[0] += CppAD::pow(vars[a_start + t], 2);
+      fg[0] += 700 * CppAD::pow(vars[delta_start + t], 2);
+      fg[0] += 10 * CppAD::pow(vars[a_start + t], 2);
     }
 
     // Minimize the value gap between sequential actuations.
     for (int t = 0; t < N - 2; t++) {
-      fg[0] += CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      fg[0] += 2500 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
 
@@ -113,8 +111,8 @@ class FG_eval {
       AD<double> delta0 = vars[delta_start + t - 1];
       AD<double> a0 = vars[a_start + t - 1];
 
-      AD<double> f0 = coeffs[0] + coeffs[1] * x0;
-      AD<double> psides0 = CppAD::atan(coeffs[1]);
+      AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2]*x0*x0 + coeffs[3]*x0*x0*x0;
+      AD<double> psides0 = CppAD::atan(coeffs[1]+2*coeffs[2]*x0 + 3 * coeffs[3]*x0*x0);
 
       // Here's `x` to get you started.
       // The idea here is to constraint this value to be 0.
@@ -272,8 +270,21 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // {...} is shorthand for creating a vector, so auto x1 = {1.0,2.0}
   // creates a 2 element double vector.
   
-  steer_value_ = solution.x[delta_start + num_states];
-  throttle_value_ = solution.x[a_start + num_states];
+  steer_value_ = solution.x[delta_start + 2];
+  throttle_value_ = solution.x[a_start + 2];
+  
+  pred_x_.clear();
+  pred_y_.clear();
+  
+  for(int i = x_start + 1; i < y_start; i++)
+  {
+	  pred_x_.push_back(solution.x[i]);
+  }
+  
+  for(int i = y_start + 1; i < psi_start; i++)
+  {
+	  pred_y_.push_back(solution.x[i]);
+  }
   
   return {solution.x[x_start + 1],   solution.x[y_start + 1],
           solution.x[psi_start + 1], solution.x[v_start + 1],

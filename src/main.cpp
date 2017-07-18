@@ -99,22 +99,15 @@ int main() {
           *
           */
 		  
-		  vector<double> ptsx_car;
-		  vector<double> ptsy_car;
+		  Eigen::VectorXd ptsx_car_Eigen(ptsx.size());
+		  Eigen::VectorXd ptsy_car_Eigen(ptsy.size());
 		  
 		  // First, we transform from map to car coordinates to make calculations easier	  
 		  for (int i = 0; i < ptsx.size(); i++) 
 		  {
-            double dx = ptsx[i] - px;
-            double dy = ptsy[i] - py;
-            ptsx_car.push_back(dx * cos(-psi) - dy * sin(-psi));
-            ptsy_car.push_back(dx * sin(-psi) + dy * cos(-psi));
+            ptsx_car_Eigen(i) = cos(psi) * (ptsx[i] - px) + sin(psi) * (ptsy[i] - py);
+            ptsy_car_Eigen(i) = -sin(psi) * (ptsx[i] - px) + cos(psi) * (ptsy[i] - py);
           }
-		  
-		  double* ptrx = &ptsx_car[0];
-          double* ptry = &ptsy_car[0];
-		  Eigen::Map<Eigen::VectorXd> ptsx_car_Eigen(ptrx, ptsx_car.size());
-		  Eigen::Map<Eigen::VectorXd> ptsy_car_Eigen(ptry, ptsy_car.size());
 		  
 		  // TODO: use `polyfit` to fit a third order polynomial to the (x, y)
 		  // coordinates.
@@ -144,13 +137,10 @@ int main() {
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
 		  
-		  for (int i = 0; i < vars.size(); i ++) {
-            if (i%2 == 0) {
-              mpc_x_vals.push_back(vars[i]);
-            }
-            else {
-              mpc_y_vals.push_back(vars[i]);
-            }
+		  for (int i = 0; i < mpc.pred_x_.size(); i++) 
+		  {
+            mpc_x_vals.push_back(mpc.pred_x_[i]);
+            mpc_y_vals.push_back(mpc.pred_y_[i]);
           }
 		  
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
@@ -163,9 +153,10 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 		  
-		  for (double i = 0; i < ptsx_car.size(); i++){
-            next_x_vals.push_back(ptsx_car[i]);
-            next_y_vals.push_back(ptsy_car[i]);
+		  for (double i = 0; i < ptsx.size(); i++)
+		  {
+            next_x_vals.push_back(ptsx_car_Eigen(i));
+            next_y_vals.push_back(ptsy_car_Eigen(i));
           }
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
@@ -186,7 +177,7 @@ int main() {
           //
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
-          //this_thread::sleep_for(chrono::milliseconds(100));
+          this_thread::sleep_for(chrono::milliseconds(100));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
