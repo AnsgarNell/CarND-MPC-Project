@@ -1,5 +1,36 @@
+[//]: # (Image References)
+[image1]: ./img/equations.png
+
 # CarND-Controls-MPC
 Self-Driving Car Engineer Nanodegree Program
+
+---
+
+## Reflection
+
+### The model
+Our vehicle's state is given by [x,y,ψ,v,cte,eψ], where x and y represent the position, ψ is the orientation, v is the velocity, cte is the Cross Track Error and eψ is the orientation error.
+
+The actuators are the wheel with it's steering angle and the gas (and break pedal) through the throttle value.
+
+The update equations that have been used can be seen in the next image:
+
+![alt text][image1]
+
+
+###Timestep Length and Elapsed Duration (N & dt)
+
+As for the dt value, from the beginning it's value has been 0.05 like in the MPC quiz. Higher values, like 0.15, did not help resolving the project.
+
+For N a low value of 10 has been selected in order to the algorithm be fast enough to compute the required formulas.
+
+###Polynomial Fitting and MPC Preprocessing
+A third grade polynomium has been fitted to the estimated waypoints line.
+
+The actuators cost was tuned in order to avoid abrupt steering angle changes and also to put the speed limit in about 56 MPH.
+
+###Model Predictive Control with Latency
+To handle the latency, after solving the MPC controller, the solution estimated for 100 ms after the calculated moment was taken. As dt 0.05, this was the solution[2] component.
 
 ---
 
